@@ -224,7 +224,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
                 return null;
             }
             // inject css
-            html = html.replaceFirst("</head>", "<style>" + CSSCodeIntoHtml + "</style></head>");
+            html = html.replaceFirst("<head>", "<head><style>" + CSSCodeIntoHtml + "</style>");
 
             //inject js
             html = replaceLast(html, "</body>", "<script>" + JSCodeIntoHtml + "</script></body>");
