@@ -144,6 +144,8 @@ class WebView extends React.Component<WebViewSharedProps, State> {
         ref={this.webViewRef}
         key="webViewKey"
         style={webViewStyles}
+        injectJSIntoHtml={this.props.injectJSIntoHtml}
+        injectCSSIntoHtml={this.props.injectCSSIntoHtml}
         source={resolveAssetSource(source)}
         scalesPageToFit={this.props.scalesPageToFit}
         allowFileAccess={this.props.allowFileAccess}
