@@ -8,4 +8,4 @@ injectJSIntoHtml : String
 
 only Android
 
-yarn add rn-webview-daoan1412
+yarn add rn-webview-enhance
