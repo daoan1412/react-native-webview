@@ -301,12 +301,16 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         }
 
         public void injectJSIntoHtml(String jsCode) {
-            coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
+            if (coreCookieManager == null) {
+                coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
+            }
             JSCodeIntoHtml = jsCode;
         }
 
         public void injectCSSIntoHtml(String cssCode) {
-            coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
+            if (coreCookieManager == null) {
+                coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
+            }
             CSSCodeIntoHtml = cssCode;
         }
     }
