@@ -8,4 +8,4 @@ injectJSIntoHtml : String
 
 only Android
 
-yarn add @daoan1412/react-native-webview
+yarn add rn-webview-daoan1412
