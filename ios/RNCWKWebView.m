@@ -97,11 +97,8 @@ static NSString *const MessageHanderName = @"ReactNative";
     wkWebViewConfig.userContentController = [WKUserContentController new];
       
     if(_injectJavaScriptAtDocumentEnd) {
-          WKUserScript *userScript = [WKUserScript new];
-          userScript.source = _injectJavaScriptAtDocumentEnd;
-          userScript.injectionTime = WKUserScriptInjectionTimeAtDocumentEnd;
-          userScript.forMainFrameOnly = YES;
-          wkWebViewConfig.userContentController = userScript;
+      WKUserScript *userScript = [[WKUserScript alloc] initWithSource:_injectJavaScriptAtDocumentEnd injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly: YES];
+      [wkWebViewConfig.userContentController addUserScript:userScript];
     }
       
     [wkWebViewConfig.userContentController addScriptMessageHandler: self name: MessageHanderName];
