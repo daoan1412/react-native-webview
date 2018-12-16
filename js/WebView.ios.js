@@ -241,6 +241,7 @@ class WebView extends React.Component<WebViewSharedProps, State> {
         style={webViewStyles}
         source={resolveAssetSource(source)}
         injectedJavaScript={this.props.injectedJavaScript}
+        injectJavaScriptAtDocumentEnd={this.props.injectJavaScriptAtDocumentEnd}
         bounces={this.props.bounces}
         scrollEnabled={this.props.scrollEnabled}
         pagingEnabled={this.props.pagingEnabled}

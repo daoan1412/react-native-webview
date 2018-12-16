@@ -95,6 +95,15 @@ static NSString *const MessageHanderName = @"ReactNative";
 
     WKWebViewConfiguration *wkWebViewConfig = [WKWebViewConfiguration new];
     wkWebViewConfig.userContentController = [WKUserContentController new];
+      
+    if(_injectJavaScriptAtDocumentEnd) {
+          WKUserScript *userScript = [WKUserScript new];
+          userScript.source = _injectJavaScriptAtDocumentEnd;
+          userScript.injectionTime = WKUserScriptInjectionTimeAtDocumentEnd;
+          userScript.forMainFrameOnly = YES;
+          wkWebViewConfig.userContentController = userScript;
+    }
+      
     [wkWebViewConfig.userContentController addScriptMessageHandler: self name: MessageHanderName];
     wkWebViewConfig.allowsInlineMediaPlayback = _allowsInlineMediaPlayback;
 #if WEBKIT_IOS_10_APIS_AVAILABLE
@@ -105,7 +114,7 @@ static NSString *const MessageHanderName = @"ReactNative";
 #else
     wkWebViewConfig.mediaPlaybackRequiresUserAction = _mediaPlaybackRequiresUserAction;
 #endif
-
+      
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration: wkWebViewConfig];
     _webView.scrollView.delegate = self;
     _webView.UIDelegate = self;
