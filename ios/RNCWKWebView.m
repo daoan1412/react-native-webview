@@ -263,9 +263,9 @@ static NSString *const MessageHanderName = @"ReactNative";
   NSString *html = [RCTConvert NSString:_source[@"html"]];
   if (html) {
     NSURL *baseURL = [RCTConvert NSURL:_source[@"baseUrl"]];
-    if (!baseURL) {
-      baseURL = [NSURL URLWithString:@"about:blank"];
-    }
+      if (!baseURL) {
+       baseURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath] isDirectory: YES];
+      }
     [_webView loadHTMLString:html baseURL:baseURL];
     return;
   }
