@@ -101,26 +101,29 @@ static NSString *const MessageHanderName = @"ReactNative";
       [wkWebViewConfig.userContentController addUserScript:userScript];
     }
       
-      NSString *filepath = [[NSBundle mainBundle] pathForResource:@"adaway.json" ofType: nil];
-      NSError *readFileErr;
-      NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&readFileErr];
-      if(fileContents) {
-          if (@available(iOS 11.0, *)) {
-              [WKContentRuleListStore.defaultStore compileContentRuleListForIdentifier: @"ContentBlockingRules" encodedContentRuleList: fileContents completionHandler: ^(WKContentRuleList *contentRuleList, NSError *err) {
-                  
-                  if (err != nil) {
-                      NSLog(@"Error on content rule list compiled");
-                      return;
-                  }
-                  
-                  if (contentRuleList) {
-                      [wkWebViewConfig.userContentController addContentRuleList: contentRuleList];
-                  }
-              }];
-          } else {
-              // Fallback on earlier versions
+      if(_blockAds) {
+          NSString *filepath = [[NSBundle mainBundle] pathForResource:@"adaway.json" ofType: nil];
+          NSError *readFileErr;
+          NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&readFileErr];
+          if(fileContents) {
+              if (@available(iOS 11.0, *)) {
+                  [WKContentRuleListStore.defaultStore compileContentRuleListForIdentifier: @"ContentBlockingRules" encodedContentRuleList: fileContents completionHandler: ^(WKContentRuleList *contentRuleList, NSError *err) {
+                      
+                      if (err != nil) {
+                          NSLog(@"Error on content rule list compiled");
+                          return;
+                      }
+                      
+                      if (contentRuleList) {
+                          [wkWebViewConfig.userContentController addContentRuleList: contentRuleList];
+                      }
+                  }];
+              } else {
+                  // Fallback on earlier versions
+              }
           }
       }
+      
       
     [wkWebViewConfig.userContentController addScriptMessageHandler: self name: MessageHanderName];
     wkWebViewConfig.allowsInlineMediaPlayback = _allowsInlineMediaPlayback;
