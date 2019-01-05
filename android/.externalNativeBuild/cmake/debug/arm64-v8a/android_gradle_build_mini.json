@@ -1,0 +1,16 @@
+{
+  "buildFiles": [
+    "/Users/daoan/Desktop/react-native-webview/android/src/cpp/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/Users/daoan/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/daoan/Desktop/react-native-webview/android/.externalNativeBuild/cmake/debug/arm64-v8a --target clean"
+  ],
+  "libraries": {
+    "native-lib-Debug-arm64-v8a": {
+      "artifactName": "native-lib",
+      "buildCommand": "/Users/daoan/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/daoan/Desktop/react-native-webview/android/.externalNativeBuild/cmake/debug/arm64-v8a --target native-lib",
+      "abi": "arm64-v8a",
+      "output": "/Users/daoan/Desktop/react-native-webview/android/build/intermediates/cmake/debug/obj/arm64-v8a/libnative-lib.so"
+    }
+  }
+}

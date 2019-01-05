@@ -2,6 +2,7 @@ package com.reactnativecommunity.webview;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.AssetManager;
 
 import com.facebook.react.uimanager.UIManagerModule;
 
@@ -29,6 +30,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
@@ -152,7 +154,6 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         @Override
         public void onPageFinished(WebView webView, String url) {
             super.onPageFinished(webView, url);
-
             if (!mLastLoadFailed) {
                 RNCWebView reactWebView = (RNCWebView) webView;
                 reactWebView.callInjectedJavaScript();
@@ -165,7 +166,6 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         public void onPageStarted(WebView webView, String url, Bitmap favicon) {
             super.onPageStarted(webView, url, favicon);
             mLastLoadFailed = false;
-
             dispatchEvent(
                     webView,
                     new TopLoadingStartEvent(
@@ -182,8 +182,14 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
             return getNewResponse(request);
         }
 
+
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         private WebResourceResponse getNewResponse(WebResourceRequest originRequest) {
+            String url = originRequest.getUrl().toString().trim();
+            Log.i("ads", "xin chao");
+            if (RNCWebViewManager.isAdsUrl(url)) {
+                return new WebResourceResponse(null, null, null);
+            }
             if (coreCookieManager == null) {
                 return null;
             }
@@ -194,7 +200,6 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
                 return null;
             }
 
-            String url = originRequest.getUrl().toString().trim();
 
             // setting okhttpclient
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -469,7 +474,16 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         return REACT_CLASS;
     }
 
+    static {
+        System.loadLibrary("native-lib");
+    }
+
+    public static native boolean isAdsUrl(String url);
+
+    public native void createAdblockServer(AssetManager assetManager);
+
     protected RNCWebView createRNCWebViewInstance(ThemedReactContext reactContext) {
+        createAdblockServer(reactContext.getAssets());
         return new RNCWebView(reactContext);
     }
 
