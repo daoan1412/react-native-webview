@@ -29,7 +29,7 @@ Java_com_reactnativecommunity_webview_RNCWebViewManager_createAdblockServer(JNIE
                                                                             jobject instance,
                                                                             jobject assetManager) {
     AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
-    AAsset *file = AAssetManager_open(mgr, "an.dat", AASSET_MODE_BUFFER);
+    AAsset *file = AAssetManager_open(mgr, "adblock.dat", AASSET_MODE_BUFFER);
     size_t fileLength = AAsset_getLength(file);
     char *fileContent = new char[fileLength];
     AAsset_read(file, fileContent, fileLength);

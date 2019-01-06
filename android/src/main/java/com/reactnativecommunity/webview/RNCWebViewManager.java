@@ -2,13 +2,9 @@ package com.reactnativecommunity.webview;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.AssetManager;
 
 import com.facebook.react.uimanager.UIManagerModule;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.CookiePolicy;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -24,13 +20,13 @@ import java.util.Map;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Picture;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.ConsoleMessage;
@@ -83,9 +79,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * Manages instances of {@link WebView}
@@ -145,15 +138,12 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         protected @Nullable
         ReadableArray mUrlPrefixesForDefaultIntent;
         protected @Nullable
-        WebkitCookieManagerProxy coreCookieManager;
-        protected @Nullable
-        String JSCodeIntoHtml;
-        protected @Nullable
-        String CSSCodeIntoHtml;
+        String JsCode;
 
         @Override
         public void onPageFinished(WebView webView, String url) {
             super.onPageFinished(webView, url);
+
             if (!mLastLoadFailed) {
                 RNCWebView reactWebView = (RNCWebView) webView;
                 reactWebView.callInjectedJavaScript();
@@ -166,106 +156,13 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         public void onPageStarted(WebView webView, String url, Bitmap favicon) {
             super.onPageStarted(webView, url, favicon);
             mLastLoadFailed = false;
+
             dispatchEvent(
                     webView,
                     new TopLoadingStartEvent(
                             webView.getId(),
                             createWebViewEvent(webView, url)));
         }
-
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-        @Override
-        public void onLoadResource(WebView view, String url) {
-            // We can't access the webview during shouldInterceptRequest(), however onLoadResource()
-            // is called on the UI thread so we're allowed to do this now:
-            view.evaluateJavascript(
-                    "(function() {" +
-
-                            "document.body.style.backgroundColor = 'red'" +
-
-                            "})();",
-
-                    null);
-
-            super.onLoadResource(view, url);
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-            if (!request.getMethod().equals("GET")) {
-                return null;
-            }
-            return getNewResponse(request);
-        }
-
-
-        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-        private WebResourceResponse getNewResponse(WebResourceRequest originRequest) {
-            String url = originRequest.getUrl().toString().trim();
-            Headers headers = Headers.of(originRequest.getRequestHeaders());
-            try {
-                String referer = headers.get("Referer");
-                if (RNCWebViewManager.isAdsUrl(url, Uri.parse(referer).getHost())) {
-                    return new WebResourceResponse(null, null, null);
-                }
-            } catch (Exception ignored) {
-
-            }
-            if (coreCookieManager == null) {
-                return null;
-            }
-            // return null if request != html
-            String acceptHeader = headers.get("Accept");
-            if (acceptHeader == null || !acceptHeader.contains("text/html")) {
-                return null;
-            }
-
-
-            // setting okhttpclient
-            OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.cookieJar(coreCookieManager);
-            builder.followSslRedirects(false);
-            builder.followRedirects(false);
-            OkHttpClient httpClient = builder.build();
-            Request request = new Request.Builder()
-                    .headers(headers)
-                    .url(url).build();
-
-
-            Response response;
-            try {
-                // fetch html
-                response = httpClient.newCall(request).execute();
-                if (response.isRedirect()) {
-                    return null;
-                }
-            } catch (IOException e) {
-                return null;
-            }
-            String html;
-            try {
-                html = response.body() != null ? response.body().string() : "";
-            } catch (IOException e) {
-                return null;
-            }
-            // inject css
-            html = html.replaceFirst("<head>", "<head><style>" + CSSCodeIntoHtml + "</style>");
-
-            //inject js
-            html = replaceLast(html, "</body>", "<script>" + JSCodeIntoHtml + "</script></body>");
-            return new WebResourceResponse("text/html", "utf-8",
-                    new ByteArrayInputStream(html.getBytes()));
-        }
-
-        private String replaceLast(String string, String from, String to) {
-            int lastIndex = string.lastIndexOf(from);
-            if (lastIndex < 0) return string;
-            String tail = string.substring(lastIndex).replaceFirst(from, to);
-            return string.substring(0, lastIndex) + tail;
-        }
-
-
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -279,6 +176,35 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             dispatchEvent(view, new TopShouldStartLoadWithRequestEvent(view.getId(), request.getUrl().toString()));
             return true;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void onLoadResource(WebView view, String url) {
+            // We can't access the webview during shouldInterceptRequest(), however onLoadResource()
+            // is called on the UI thread so we're allowed to do this now:
+            view.evaluateJavascript(
+                    this.JsCode,
+
+                    null);
+
+            super.onLoadResource(view, url);
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        @android.support.annotation.Nullable
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            String url = request.getUrl().toString().trim();
+            Headers headers = Headers.of(request.getRequestHeaders());
+            String referer = headers.get("Referer");
+            if ((referer != null ? referer.trim().length() : 0) == 0) {
+                referer = "https://www.google.com.vn";
+            }
+            if (RNCWebViewManager.isAdsUrl(url, Uri.parse(referer.trim()).getHost())) {
+                return new WebResourceResponse(null, null, null);
+            }
+            return super.shouldInterceptRequest(view, request);
         }
 
         @Override
@@ -327,19 +253,8 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         public void setUrlPrefixesForDefaultIntent(ReadableArray specialUrls) {
             mUrlPrefixesForDefaultIntent = specialUrls;
         }
-
-        public void injectJSIntoHtml(String jsCode) {
-            if (coreCookieManager == null) {
-                coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
-            }
-            JSCodeIntoHtml = jsCode;
-        }
-
-        public void injectCSSIntoHtml(String cssCode) {
-            if (coreCookieManager == null) {
-                coreCookieManager = new WebkitCookieManagerProxy(null, CookiePolicy.ACCEPT_ALL);
-            }
-            CSSCodeIntoHtml = cssCode;
+        public void injectJavaScriptAtDocumentEnd(String code) {
+           this.JsCode = code;
         }
     }
 
@@ -761,23 +676,13 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         }
     }
 
-    @ReactProp(name = "injectJSIntoHtml")
-    public void injectJSIntoHtml(
+    @ReactProp(name = "injectJavaScriptAtDocumentEnd")
+    public void injectJavaScriptAtDocumentEnd(
             WebView view,
             @Nullable String jsCode) {
         RNCWebViewClient client = ((RNCWebView) view).getRNCWebViewClient();
         if (client != null && jsCode != null) {
-            client.injectJSIntoHtml(jsCode);
-        }
-    }
-
-    @ReactProp(name = "injectCSSIntoHtml")
-    public void injectCSSIntoHtml(
-            WebView view,
-            @Nullable String cssCode) {
-        RNCWebViewClient client = ((RNCWebView) view).getRNCWebViewClient();
-        if (client != null && cssCode != null) {
-            client.injectCSSIntoHtml(cssCode);
+            client.injectJavaScriptAtDocumentEnd(jsCode);
         }
     }
 
