@@ -173,6 +173,23 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
                             createWebViewEvent(webView, url)));
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void onLoadResource(WebView view, String url) {
+            // We can't access the webview during shouldInterceptRequest(), however onLoadResource()
+            // is called on the UI thread so we're allowed to do this now:
+            view.evaluateJavascript(
+                    "(function() {" +
+
+                            "document.body.style.backgroundColor = 'red'" +
+
+                            "})();",
+
+                    null);
+
+            super.onLoadResource(view, url);
+        }
+
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -186,15 +203,19 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         private WebResourceResponse getNewResponse(WebResourceRequest originRequest) {
             String url = originRequest.getUrl().toString().trim();
-            Log.i("ads", "xin chao");
-            if (RNCWebViewManager.isAdsUrl(url)) {
-                return new WebResourceResponse(null, null, null);
+            Headers headers = Headers.of(originRequest.getRequestHeaders());
+            try {
+                String referer = headers.get("Referer");
+                if (RNCWebViewManager.isAdsUrl(url, Uri.parse(referer).getHost())) {
+                    return new WebResourceResponse(null, null, null);
+                }
+            } catch (Exception ignored) {
+
             }
             if (coreCookieManager == null) {
                 return null;
             }
             // return null if request != html
-            Headers headers = Headers.of(originRequest.getRequestHeaders());
             String acceptHeader = headers.get("Accept");
             if (acceptHeader == null || !acceptHeader.contains("text/html")) {
                 return null;
@@ -243,6 +264,8 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
             String tail = string.substring(lastIndex).replaceFirst(from, to);
             return string.substring(0, lastIndex) + tail;
         }
+
+
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -478,7 +501,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         System.loadLibrary("native-lib");
     }
 
-    public static native boolean isAdsUrl(String url);
+    public static native boolean isAdsUrl(String url, String host);
 
     public native void createAdblockServer(AssetManager assetManager);
 
