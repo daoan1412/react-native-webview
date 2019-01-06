@@ -22,6 +22,11 @@ using std::string;
 using std::regex;
 
 static AdBlockClient adBlockClient;
+static regex re_js("(.*)\\.js(\\?.+)?");
+static regex re_css("(.*)\\.css(\\?.+)?");
+static regex re_image("(.*)\\.(gif|png|jpe?g|bmp|ico)(\\?.+)?");
+static regex re_font("(.*)\\.(ttf|woff)(\\?.+)?");
+static regex re_html("(.*)\\.html?(\\?.+)?");
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -44,11 +49,6 @@ Java_com_reactnativecommunity_webview_RNCWebViewManager_isAdsUrl(JNIEnv *env, jc
     const char *url = env->GetStringUTFChars(url_, 0);
     const char *host = env->GetStringUTFChars(host_, 0);
 
-    regex re_js("(.*)\\.js(\\?.+)?");
-    regex re_css("(.*)\\.css(\\?.+)?");
-    regex re_image("(.*)\\.(gif|png|jpe?g|bmp|ico)(\\?.+)?");
-    regex re_font("(.*)\\.(ttf|woff)(\\?.+)?");
-    regex re_html("(.*)\\.html?(\\?.+)?");
     FilterOption option;
     if (regex_match(url, re_js)) {
         option = FOScript;
