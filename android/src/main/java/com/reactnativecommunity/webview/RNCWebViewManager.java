@@ -184,7 +184,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
             // We can't access the webview during shouldInterceptRequest(), however onLoadResource()
             // is called on the UI thread so we're allowed to do this now:
             view.evaluateJavascript(
-                    this.JsCode,
+                    String.join("if (!window.injectJSAtDocumentEnd) { window.injectJSAtDocumentEnd = true; \n", this.JsCode, "}"),
 
                     null);
 
